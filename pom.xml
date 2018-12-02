@@ -31,11 +31,6 @@
 		<developerConnection>scm:git:git@github.com:mratzer/adventofcode2018.git</developerConnection>
 	</scm>
 
-	<issueManagement>
-		<url>https://github.com/mratzer/adventofcode2018/issues</url>
-		<system>GitHub Issues</system>
-	</issueManagement>
-
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
