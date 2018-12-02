@@ -20,13 +20,34 @@ import eu.marrat.advent2018.common.Utils;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Day01 {
 
 	public static void main(String[] args) throws IOException {
-		long output = Files.lines(Utils.getPathFromClasspathFile("input")).mapToLong(Long::parseLong).sum();
+		List<Long> deltas = Files.lines(Utils.getPathFromClasspathFile("input"))
+				.map(Long::parseLong)
+				.collect(Collectors.toList());
 
-		System.out.println(output);
+		Set<Long> frequencies = new HashSet<>();
+
+		long currentFrequency = 0;
+		boolean found = false;
+
+		while (!found) {
+			for (Long delta : deltas) {
+				currentFrequency += delta;
+				if (!frequencies.add(currentFrequency)) {
+					found = true;
+					break;
+				}
+			}
+		}
+
+		System.out.println(currentFrequency);
 	}
 
 }
