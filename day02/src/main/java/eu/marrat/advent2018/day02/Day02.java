@@ -16,5 +16,61 @@
 
 package eu.marrat.advent2018.day02;
 
+import eu.marrat.advent2018.common.ClasspathFileUtils;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public class Day02 {
+
+	public static void main(String[] args) {
+		List<Id> ids = ClasspathFileUtils.getLines("input")
+				.map(Id::new)
+				.filter(Id::hasAnything)
+				.collect(Collectors.toList());
+
+		long twos = ids.stream()
+				.filter(Id::hasTwo)
+				.count();
+
+		long threes = ids.stream()
+				.filter(Id::hasThree)
+				.count();
+
+		System.out.println(twos * threes);
+	}
+
+	static class Id {
+
+		private final boolean hasTwo;
+
+		private final boolean hasThree;
+
+		Id(String string) {
+			Set<Long> twosAndThrees = string.chars()
+					.boxed()
+					.collect(Collectors.groupingBy(i -> i, Collectors.counting()))
+					.values().stream()
+					.filter(l -> l == 2 || l == 3)
+					.collect(Collectors.toSet());
+
+			hasTwo = twosAndThrees.contains(2L);
+			hasThree = twosAndThrees.contains(3L);
+		}
+
+		boolean hasTwo() {
+			return hasTwo;
+		}
+
+		boolean hasThree() {
+			return hasThree;
+		}
+
+		boolean hasAnything() {
+			return hasTwo || hasThree;
+		}
+
+	}
+
 }
