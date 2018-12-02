@@ -17,7 +17,9 @@
 package eu.marrat.advent2018.day02;
 
 import eu.marrat.advent2018.common.ClasspathFileUtils;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -39,9 +41,24 @@ public class Day02 {
 				.count();
 
 		System.out.println(twos * threes);
+
+		Set<Set<String>> stringGroupsWithDistanceOne = new HashSet<>();
+
+		for (Id id1 : ids) {
+			for (Id id2 : ids) {
+				if (LevenshteinDistance.getDefaultInstance()
+						.apply(id1.string, id2.string) == 1) {
+					stringGroupsWithDistanceOne.add(Set.of(id1.string, id2.string));
+				}
+			}
+		}
+
+		System.out.println(stringGroupsWithDistanceOne);
 	}
 
 	static class Id {
+
+		private final String string;
 
 		private final boolean hasTwo;
 
@@ -54,6 +71,8 @@ public class Day02 {
 					.values().stream()
 					.filter(l -> l == 2 || l == 3)
 					.collect(Collectors.toSet());
+
+			this.string = string;
 
 			hasTwo = twosAndThrees.contains(2L);
 			hasThree = twosAndThrees.contains(3L);
