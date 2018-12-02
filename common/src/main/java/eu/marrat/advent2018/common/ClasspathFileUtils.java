@@ -16,21 +16,31 @@
 
 package eu.marrat.advent2018.common;
 
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+import java.util.Scanner;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
-public class Utils {
+public class ClasspathFileUtils {
 
-	public static Path getPathFromClasspathFile(String file) {
-		try {
-			return Paths.get(Utils.class.getClassLoader().getResource("input").toURI());
-		} catch (URISyntaxException e) {
-			throw new RuntimeException(e);
-		}
+	private static final Pattern NEW_LINE = Pattern.compile("\n");
+
+	public static Stream<Long> getLongs(String file) {
+		return getLines(file).map(Long::parseLong);
 	}
 
-	private Utils() {
+	public static Stream<String> getLines(String file) {
+		Scanner scanner = new Scanner(
+				Objects.requireNonNull(ClasspathFileUtils.class.getClassLoader().getResourceAsStream(file)),
+				StandardCharsets.UTF_8);
+
+		return scanner
+				.useDelimiter(NEW_LINE)
+				.tokens();
+	}
+
+	private ClasspathFileUtils() {
 		throw new IllegalStateException();
 	}
 

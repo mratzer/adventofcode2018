@@ -16,10 +16,8 @@
 
 package eu.marrat.advent2018.day01;
 
-import eu.marrat.advent2018.common.Utils;
+import eu.marrat.advent2018.common.ClasspathFileUtils;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,9 +25,8 @@ import java.util.stream.Collectors;
 
 public class Day01 {
 
-	public static void main(String[] args) throws IOException {
-		List<Long> deltas = Files.lines(Utils.getPathFromClasspathFile("input"))
-				.map(Long::parseLong)
+	public static void main(String[] args) {
+		List<Long> deltas = ClasspathFileUtils.getLongs("input")
 				.collect(Collectors.toList());
 
 		Set<Long> frequencies = new HashSet<>();
