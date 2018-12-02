@@ -16,10 +16,17 @@
 
 package eu.marrat.advent2018.day01;
 
+import eu.marrat.advent2018.common.Utils;
+
+import java.io.IOException;
+import java.nio.file.Files;
+
 public class Day01 {
 
-	public static void main(String[] args) {
-		System.out.println("day 01");
+	public static void main(String[] args) throws IOException {
+		long output = Files.lines(Utils.getPathFromClasspathFile("input")).mapToLong(Long::parseLong).sum();
+
+		System.out.println(output);
 	}
 
 }
