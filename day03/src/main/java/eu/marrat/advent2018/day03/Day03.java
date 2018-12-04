@@ -19,21 +19,25 @@ package eu.marrat.advent2018.day03;
 import eu.marrat.advent2018.common.ClasspathFileUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Day03 {
 
     public static void main(String[] args) {
         int[][] arr = new int[1000][1000];
 
-        ClasspathFileUtils.getLines("input")
+        List<Claim> claims = ClasspathFileUtils.getLines("input")
                 .map(Claim::new)
-                .forEach(c -> c.apply(arr));
+                .collect(Collectors.toList());
+
+        claims.forEach(c -> c.apply(arr));
 
         int count = 0;
 
-        for(int x = 0; x < arr.length; ++x) {
+        for (int x = 0; x < arr.length; ++x) {
             for (int y = 0; y < arr[x].length; ++y) {
                 if (arr[x][y] > 1) {
                     ++count;
@@ -42,6 +46,11 @@ public class Day03 {
         }
 
         System.out.println(count);
+
+        claims.stream()
+                .filter(c -> c.isUnique(arr))
+                .findFirst()
+                .ifPresent(System.out::println);
     }
 
     static class Claim {
@@ -76,6 +85,18 @@ public class Day03 {
                     arr[x + dx][y + dy]++;
                 }
             }
+        }
+
+        boolean isUnique(int[][] arr) {
+            for (int dx = 0; dx < width; ++dx) {
+                for (int dy = 0; dy < height; dy++) {
+                    if (arr[x + dx][y + dy] != 1) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         @Override
