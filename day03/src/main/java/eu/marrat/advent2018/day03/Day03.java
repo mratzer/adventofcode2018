@@ -55,9 +55,9 @@ public class Day03 {
 
     static class Claim {
 
-        private static final Pattern PATTERN = Pattern.compile("(#\\d+) @ (\\d+),(\\d+): (\\d+)x(\\d+)");
+        private static final Pattern PATTERN = Pattern.compile("#(\\d+) @ (\\d+),(\\d+): (\\d+)x(\\d+)");
 
-        private final String id;
+        private final int id;
 
         private final int x;
 
@@ -72,7 +72,7 @@ public class Day03 {
             if (!matcher.matches()) {
                 throw new IllegalArgumentException(String.format("Illegal claim: [%s]", string));
             }
-            id = matcher.group(1);
+            id = Integer.parseInt(matcher.group(1));
             x = Integer.parseInt(matcher.group(2));
             y = Integer.parseInt(matcher.group(3));
             width = Integer.parseInt(matcher.group(4));
