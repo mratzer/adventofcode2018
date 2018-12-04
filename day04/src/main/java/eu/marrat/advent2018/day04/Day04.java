@@ -59,22 +59,13 @@ public class Day04 {
 
         System.out.println(guards);
         System.out.println(longSleeper);
+        System.out.println(longSleeper.id * longSleeper.getMostSleepyMinute());
 
-        int[] minutes = new int[60];
+        Guard guard = guards.values().stream()
+                .max(Comparator.comparing(Guard::countsOfMostSleepyMinute))
+                .orElseThrow(IllegalStateException::new);
 
-        for (Pair<LocalDateTime, Integer> sleep : longSleeper.getSleeps()) {
-            int start = sleep.getLeft().getMinute();
-            int end = start + sleep.getRight();
-
-            for (int i = start; i < end; ++i) {
-                minutes[i]++;
-            }
-        }
-
-        IntStream.range(0, minutes.length)
-                .reduce((a, b) -> minutes[a] < minutes[b] ? b : a)
-                .ifPresent(ix -> System.out.println(longSleeper.id * ix));
-
+        System.out.println(guard.id * guard.getMostSleepyMinute());
     }
 
     private static Map<Integer, Guard> getGuardsAndTheirEvents() {
@@ -236,6 +227,42 @@ public class Day04 {
                     .map(Pair::getRight)
                     .mapToInt(Integer::intValue)
                     .sum();
+        }
+
+        int countsOfMostSleepyMinute() {
+            return getSleepyCountsAtMinute(getMostSleepyMinute());
+        }
+
+        int getMostSleepyMinute() {
+            int[] minutes = new int[60];
+
+            for (Pair<LocalDateTime, Integer> sleep : getSleeps()) {
+                int start = sleep.getLeft().getMinute();
+                int end = start + sleep.getRight();
+
+                for (int i = start; i < end; ++i) {
+                    minutes[i]++;
+                }
+            }
+
+            return IntStream.range(0, minutes.length)
+                    .reduce((a, b) -> minutes[a] < minutes[b] ? b : a)
+                    .orElseThrow();
+        }
+
+        int getSleepyCountsAtMinute(int minute) {
+            int count = 0;
+
+            for (Pair<LocalDateTime, Integer> sleep : getSleeps()) {
+                int start = sleep.getLeft().getMinute();
+                int end = start + sleep.getRight();
+
+                if (start <= minute || minute <= end) {
+                    ++count;
+                }
+
+            }
+            return count;
         }
 
         private int calculateSleepTimeMinutes(LocalDateTime start, LocalDateTime end) {
