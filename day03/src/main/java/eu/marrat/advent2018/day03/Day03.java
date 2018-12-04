@@ -16,5 +16,78 @@
 
 package eu.marrat.advent2018.day03;
 
+import eu.marrat.advent2018.common.ClasspathFileUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class Day03 {
+
+    public static void main(String[] args) {
+        int[][] arr = new int[1000][1000];
+
+        ClasspathFileUtils.getLines("input")
+                .map(Claim::new)
+                .forEach(c -> c.apply(arr));
+
+        int count = 0;
+
+        for(int x = 0; x < arr.length; ++x) {
+            for (int y = 0; y < arr[x].length; ++y) {
+                if (arr[x][y] > 1) {
+                    ++count;
+                }
+            }
+        }
+
+        System.out.println(count);
+    }
+
+    static class Claim {
+
+        private static final Pattern PATTERN = Pattern.compile("(#\\d+) @ (\\d+),(\\d+): (\\d+)x(\\d+)");
+
+        private final String id;
+
+        private final int x;
+
+        private final int y;
+
+        private final int width;
+
+        private final int height;
+
+        Claim(String string) {
+            Matcher matcher = PATTERN.matcher(string);
+            if (!matcher.matches()) {
+                throw new IllegalArgumentException(String.format("Illegal claim: [%s]", string));
+            }
+            id = matcher.group(1);
+            x = Integer.parseInt(matcher.group(2));
+            y = Integer.parseInt(matcher.group(3));
+            width = Integer.parseInt(matcher.group(4));
+            height = Integer.parseInt(matcher.group(5));
+        }
+
+        void apply(int[][] arr) {
+            for (int dx = 0; dx < width; ++dx) {
+                for (int dy = 0; dy < height; dy++) {
+                    arr[x + dx][y + dy]++;
+                }
+            }
+        }
+
+        @Override
+        public String toString() {
+            return new ToStringBuilder(this)
+                    .append("id", id)
+                    .append("x", x)
+                    .append("y", y)
+                    .append("width", width)
+                    .append("height", height)
+                    .toString();
+        }
+    }
+
 }
