@@ -19,27 +19,54 @@ package eu.marrat.advent2018.day05;
 import eu.marrat.advent2018.common.ClasspathFileUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Day05 {
 
     public static void main(String[] args) {
-        LinkedList<Integer> input = ClasspathFileUtils.getLines("input")
+        List<Integer> input = ClasspathFileUtils.getLines("input")
                 .filter(StringUtils::isNotEmpty)
                 .findFirst()
                 .orElseThrow(IllegalArgumentException::new)
                 .chars()
                 .boxed()
-                .collect(Collectors.toCollection(LinkedList::new));
+                .collect(Collectors.toList());
+
+        LinkedList<Integer> pairs = removeNeighboringPairs(input);
+        System.out.println(pairs.size());
+
+        long min = IntStream.rangeClosed('A', 'Z')
+                .mapToObj(c -> getFilteredList(input, c + 32, c))
+                .map(Day05::removeNeighboringPairs)
+                .mapToInt(Collection::size)
+                .min()
+                .orElse(-1);
+
+        System.out.println(min);
+    }
+
+    private static List<Integer> getFilteredList(List<Integer> input, int lc, int uc) {
+        return input.stream()
+                .mapToInt(Integer::intValue)
+                .filter(i -> i != lc && i != uc)
+                .boxed()
+                .collect(Collectors.toList());
+    }
+
+    private static LinkedList<Integer> removeNeighboringPairs(List<Integer> input) {
+        LinkedList<Integer> list = new LinkedList<>(input);
 
         boolean changed;
 
         do {
             changed = false;
 
-            for (ListIterator<Integer> iterator = input.listIterator(); iterator.hasNext(); ) {
+            for (ListIterator<Integer> iterator = list.listIterator(); iterator.hasNext(); ) {
                 Integer right = iterator.next();
 
                 // set iterator position to the same as before call of .next()
@@ -64,11 +91,13 @@ public class Day05 {
                 }
 
                 // set iterator position to same as after call of first .next() to continue loop
-                iterator.next();
+                if (iterator.hasNext()) {
+                    iterator.next();
+                }
             }
         } while (changed);
 
-        System.out.println(input.size());
+        return list;
     }
 
 }
