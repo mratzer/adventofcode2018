@@ -16,5 +16,59 @@
 
 package eu.marrat.advent2018.day05;
 
+import eu.marrat.advent2018.common.ClasspathFileUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.LinkedList;
+import java.util.ListIterator;
+import java.util.stream.Collectors;
+
 public class Day05 {
+
+    public static void main(String[] args) {
+        LinkedList<Integer> input = ClasspathFileUtils.getLines("input")
+                .filter(StringUtils::isNotEmpty)
+                .findFirst()
+                .orElseThrow(IllegalArgumentException::new)
+                .chars()
+                .boxed()
+                .collect(Collectors.toCollection(LinkedList::new));
+
+        boolean changed;
+
+        do {
+            changed = false;
+
+            for (ListIterator<Integer> iterator = input.listIterator(); iterator.hasNext(); ) {
+                Integer right = iterator.next();
+
+                // set iterator position to the same as before call of .next()
+                iterator.previous();
+
+                if (iterator.hasPrevious()) {
+                    Integer left = iterator.previous();
+
+                    if ((right - left == 32) || (left - right == 32)) {
+                        // remove left
+                        iterator.remove();
+
+                        // remove right
+                        iterator.next();
+                        iterator.remove();
+                        changed = true;
+                    } else {
+                        // set iterator position to the same as before call of .previous()
+                        iterator.next();
+                    }
+
+                }
+
+                // set iterator position to same as after call of first .next() to continue loop
+                iterator.next();
+            }
+        } while (changed);
+
+        System.out.println(input.size());
+    }
+
 }
