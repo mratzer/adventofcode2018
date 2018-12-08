@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -33,6 +34,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Day07 {
@@ -62,9 +64,128 @@ public class Day07 {
 				.skip(1)
 				.collect(Collectors.joining("")));
 
+		Set<Worker> workers = Worker.breedWorkers(5);
+		Work work = new Work(fake);
+
+		int i = 0;
+
+		while (!work.allWorkDone()) {
+			System.out.format("--- Tick %3d -----------%n", i);
+			work.tick(workers);
+			++i;
+		}
+
+		System.out.println(i - 1);
+	}
+
+	static class Worker {
+
+		private final int id;
+
+		private Step currentStep;
+
+		private int remainingDurationForCurrentStep;
+
+		Worker(int id) {
+			this.id = id;
+		}
+
+		int getId() {
+			return id;
+		}
+
+		void beginToWorkOn(Step step) {
+			currentStep = step;
+			remainingDurationForCurrentStep = step.getDuration();
+			System.out.format("Worker %d begins work on step %s which will take %d seconds%n",
+					id, currentStep, remainingDurationForCurrentStep);
+		}
+
+		void tick() {
+			remainingDurationForCurrentStep--;
+		}
+
+		boolean hasStep() {
+			return currentStep != null;
+		}
+
+		Step removeStep() {
+			Step step = currentStep;
+			currentStep = null;
+			return step;
+		}
+
+		boolean isReadyForMoreWork() {
+			return remainingDurationForCurrentStep <= 0;
+		}
+
+		static Set<Worker> breedWorkers(int count) {
+			return IntStream.range(0, count)
+					.mapToObj(Worker::new)
+					.collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(Worker::getId))));
+		}
+
+	}
+
+	static class Work {
+
+		private final int totalSteps;
+
+		private final Set<Step> openSteps;
+		private final Set<Step> performedSteps = new HashSet<>();
+
+		Work(Step fake) {
+			performedSteps.add(fake);
+
+			openSteps = fake.collect();
+			totalSteps = openSteps.size();
+			openSteps.remove(fake);
+		}
+
+		Work(Collection<Step> steps) {
+			openSteps = new HashSet<>(steps);
+			totalSteps = openSteps.size();
+		}
+
+		boolean allWorkDone() {
+			return performedSteps.size() == totalSteps;
+		}
+
+		void tick(Set<Worker> workers) {
+			TreeSet<Step> readySteps = new TreeSet<>();
+
+			workers.stream()
+					.filter(Worker::isReadyForMoreWork)
+					.filter(Worker::hasStep)
+					.map(Worker::removeStep)
+					.forEach(performedSteps::add);
+
+			openSteps.stream()
+					.filter(s -> s.isReady(performedSteps))
+					.forEach(readySteps::add);
+
+			System.out.format("There are %2d steps open:  %s%n", openSteps.size(), openSteps);
+			System.out.format("There are %2d steps ready: %s%n", readySteps.size(), readySteps);
+			System.out.format("There are %2d steps done:  %s%n", performedSteps.size(), performedSteps);
+
+			workers.stream()
+					.filter(Worker::isReadyForMoreWork)
+					.forEach(worker -> {
+						if (!readySteps.isEmpty()) {
+							Step nextReadyStep = readySteps.first();
+							openSteps.remove(nextReadyStep);
+							readySteps.remove(nextReadyStep);
+							worker.beginToWorkOn(nextReadyStep);
+						}
+					});
+
+			workers.forEach(Worker::tick);
+		}
 	}
 
 	static class Step implements Comparable<Step> {
+
+		private static final int FIXED_DURATION = 60;
 
 		private final String name;
 
@@ -78,6 +199,10 @@ public class Day07 {
 
 		String getName() {
 			return name;
+		}
+
+		int getDuration() {
+			return ((int) name.charAt(0)) - 'A' + FIXED_DURATION + 1;
 		}
 
 		void mustBeFinishedBefore(Step other) {
