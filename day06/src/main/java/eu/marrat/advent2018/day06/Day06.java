@@ -42,19 +42,21 @@ public class Day06 {
 
 		OtherThing otherThing = new OtherThing(coordinates);
 
-		Thing thing = new Thing(new Coordinate(0, 0), otherThing);
+		Thing thing = new Thing(new Coordinate(-500, -500), otherThing);
 
-		BufferedImage image = new BufferedImage(500, 500, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage image = new BufferedImage(1500, 1500, BufferedImage.TYPE_INT_ARGB);
 
 		Set<OriginalCoordinate> infinites = new HashSet<>();
 		Set<Thing> allUnqiue = new HashSet<>();
+		Set<Thing> all = new HashSet<>();
 
-		for (int y = 0; y < 500; ++y) {
+		for (int y = 0; y < 1500; ++y) {
 			Thing blah = thing;
 
-			for (int x = 0; x < 500; ++x) {
+			for (int x = 0; x < 1500; ++x) {
+				all.add(blah);
 				if (blah.hasUniqueClosestDistance()) {
-					if (y == 0 || y == 499 || x == 0 || x == 499) {
+					if (y == 0 || y == 1499 || x == 0 || x == 1499) {
 						infinites.add(blah.getClosestNamedCoordinate());
 					} else {
 						allUnqiue.add(blah);
@@ -80,6 +82,19 @@ public class Day06 {
 
 		System.out.println(max);
 
+		List<Thing> collect1 = all.stream()
+				.filter(t -> t.getSumOfAllDistances() < 10_000)
+				.collect(Collectors.toList());
+
+		collect1.forEach(t -> {
+			int x = t.getOwnCoordinate().getX() + 500;
+			int y = t.getOwnCoordinate().getY() + 500;
+
+			image.setRGB(x, y, new Color(image.getRGB(x, y)).brighter().brighter().getRGB());
+		});
+
+		System.out.println(collect1.size());
+
 		ImageIO.write(image, "png", Paths.get("test.png").toFile());
 	}
 
@@ -100,8 +115,19 @@ public class Day06 {
 			closestCoordinates = getShortestDistances(ownCoordinate, otherThing);
 		}
 
+		Coordinate getOwnCoordinate() {
+			return ownCoordinate;
+		}
+
 		boolean hasUniqueClosestDistance() {
 			return closestCoordinates.size() == 1;
+		}
+
+		int getSumOfAllDistances() {
+			return otherThing.getAllCoordinates().stream()
+					.map(ownCoordinate::calculateDistance)
+					.mapToInt(Distance::getDistance)
+					.sum();
 		}
 
 		OriginalCoordinate getClosestNamedCoordinate() {
