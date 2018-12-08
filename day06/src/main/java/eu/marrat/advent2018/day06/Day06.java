@@ -24,15 +24,15 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class Day06 {
+
+	private static final int LENGTH = 400;
 
 	public static void main(String[] args) throws IOException {
 		List<OriginalCoordinate> coordinates = ClasspathFileUtils.getLines("input")
@@ -40,40 +40,40 @@ public class Day06 {
 				.map(OriginalCoordinate::fromString)
 				.collect(Collectors.toList());
 
-		OtherThing otherThing = new OtherThing(coordinates);
+		OriginalData originalData = new OriginalData(coordinates);
 
-		Thing thing = new Thing(new Coordinate(-500, -500), otherThing);
+		RegionPoint regionPoint = new RegionPoint(new Coordinate(0, 0), originalData);
 
-		BufferedImage image = new BufferedImage(1500, 1500, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage image = new BufferedImage(LENGTH, LENGTH, BufferedImage.TYPE_INT_ARGB);
 
-		Set<OriginalCoordinate> infinites = new HashSet<>();
-		Set<Thing> allUnqiue = new HashSet<>();
-		Set<Thing> all = new HashSet<>();
+		Set<OriginalCoordinate> assumedInfiniteRoots = new HashSet<>();
+		Set<RegionPoint> regionPointsWithUniqueDistance = new HashSet<>();
+		Set<RegionPoint> allRegionPoints = new HashSet<>();
 
-		for (int y = 0; y < 1500; ++y) {
-			Thing blah = thing;
+		for (int y = 0; y < LENGTH; ++y) {
+			RegionPoint current = regionPoint;
 
-			for (int x = 0; x < 1500; ++x) {
-				all.add(blah);
-				if (blah.hasUniqueClosestDistance()) {
-					if (y == 0 || y == 1499 || x == 0 || x == 1499) {
-						infinites.add(blah.getClosestNamedCoordinate());
+			for (int x = 0; x < LENGTH; ++x) {
+				allRegionPoints.add(current);
+				if (current.hasUniqueClosestDistance()) {
+					if (y == 0 || y == LENGTH - 1 || x == 0 || x == LENGTH - 1) {
+						assumedInfiniteRoots.add(current.getClosestNamedCoordinate());
 					} else {
-						allUnqiue.add(blah);
+						regionPointsWithUniqueDistance.add(current);
 					}
 				}
 
-				image.setRGB(x, y, blah.getColor().getRGB());
-				blah = blah.next(Direction.EAST);
+				image.setRGB(x, y, current.getColor().getRGB());
+				current = current.next(Direction.EAST);
 			}
 
-			thing = thing.next(Direction.SOUTH);
+			regionPoint = regionPoint.next(Direction.SOUTH);
 		}
 
-		allUnqiue.removeIf(t -> infinites.contains(t.getClosestNamedCoordinate()));
+		regionPointsWithUniqueDistance.removeIf(rp -> assumedInfiniteRoots.contains(rp.getClosestNamedCoordinate()));
 
-		Map<OriginalCoordinate, List<Thing>> collect = allUnqiue.stream()
-				.collect(Collectors.groupingBy(Thing::getClosestNamedCoordinate));
+		Map<OriginalCoordinate, List<RegionPoint>> collect = regionPointsWithUniqueDistance.stream()
+				.collect(Collectors.groupingBy(RegionPoint::getClosestNamedCoordinate));
 
 		int max = collect.values().stream()
 				.mapToInt(List::size)
@@ -82,89 +82,20 @@ public class Day06 {
 
 		System.out.println(max);
 
-		List<Thing> collect1 = all.stream()
+		List<RegionPoint> regionPointsWithinDistance = allRegionPoints.stream()
 				.filter(t -> t.getSumOfAllDistances() < 10_000)
 				.collect(Collectors.toList());
 
-		collect1.forEach(t -> {
-			int x = t.getOwnCoordinate().getX() + 500;
-			int y = t.getOwnCoordinate().getY() + 500;
+		regionPointsWithinDistance.forEach(t -> {
+			int x = t.getOwnCoordinate().getX();
+			int y = t.getOwnCoordinate().getY();
 
 			image.setRGB(x, y, new Color(image.getRGB(x, y)).brighter().brighter().getRGB());
 		});
 
-		System.out.println(collect1.size());
+		System.out.println(regionPointsWithinDistance.size());
 
 		ImageIO.write(image, "png", Paths.get("test.png").toFile());
-	}
-
-	static class Thing {
-
-		private final Coordinate ownCoordinate;
-
-		private final OtherThing otherThing;
-
-		private final List<Distance> closestCoordinates;
-
-		private final Map<Direction, Thing> neighbors = new EnumMap<>(Direction.class);
-
-		Thing(Coordinate ownCoordinate, OtherThing otherThing) {
-			this.ownCoordinate = ownCoordinate;
-			this.otherThing = otherThing;
-
-			closestCoordinates = getShortestDistances(ownCoordinate, otherThing);
-		}
-
-		Coordinate getOwnCoordinate() {
-			return ownCoordinate;
-		}
-
-		boolean hasUniqueClosestDistance() {
-			return closestCoordinates.size() == 1;
-		}
-
-		int getSumOfAllDistances() {
-			return otherThing.getAllCoordinates().stream()
-					.map(ownCoordinate::calculateDistance)
-					.mapToInt(Distance::getDistance)
-					.sum();
-		}
-
-		OriginalCoordinate getClosestNamedCoordinate() {
-			if (hasUniqueClosestDistance()) {
-				return closestCoordinates.get(0).getTo();
-			} else {
-				throw new IllegalStateException();
-			}
-		}
-
-		Thing next(Direction direction) {
-			return neighbors.computeIfAbsent(direction, this::createNext);
-		}
-
-		private Thing createNext(Direction direction) {
-			Coordinate next = ownCoordinate.next(direction);
-			return new Thing(otherThing.findMatchingNamedCoordinate(next).orElse(next), otherThing);
-		}
-
-		private List<Distance> getShortestDistances(Coordinate ownCoordinate, OtherThing otherThing) {
-			return otherThing.getAllCoordinates().stream()
-					.map(ownCoordinate::calculateDistance)
-					.collect(Collectors.groupingBy(Distance::getDistance, TreeMap::new, Collectors.toList()))
-					.firstEntry()
-					.getValue();
-		}
-
-		Color getColor() {
-			if (ownCoordinate instanceof OriginalCoordinate) {
-				return ((OriginalCoordinate) ownCoordinate).getColor();
-			} else if (hasUniqueClosestDistance()) {
-				return closestCoordinates.get(0).getTo().getColor().darker();
-			} else {
-				return Color.BLACK;
-			}
-		}
-
 	}
 
 }
