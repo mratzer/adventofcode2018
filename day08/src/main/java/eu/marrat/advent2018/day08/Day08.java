@@ -86,6 +86,7 @@ public class Day08 {
 
 		System.out.println(stack.size());
 		System.out.println(Objects.requireNonNull(root).sumMetaData());
+		System.out.println(Objects.requireNonNull(root).calculateLicenseNumber());
 	}
 
 	static class Node {
@@ -136,6 +137,19 @@ public class Day08 {
 
 		int sumMetaData() {
 			return IntStream.of(metaData).sum() + Stream.of(children).mapToInt(Node::sumMetaData).sum();
+		}
+
+		int calculateLicenseNumber() {
+			if (children.length == 0) {
+				return IntStream.of(metaData).sum();
+			} else {
+				return IntStream.of(metaData)
+						.map(i -> i - 1)
+						.filter(i -> i >= 0 && i < children.length)
+						.mapToObj(i -> children[i])
+						.mapToInt(Node::calculateLicenseNumber)
+						.sum();
+			}
 		}
 
 	}
